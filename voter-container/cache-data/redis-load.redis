@@ -1,0 +1,3 @@
+flushdb
+json.set voter:1 $ '{ "VoterID": 1, "FirstName": "Ram Eshwar", "LastName": "Kaundinya" }'
+curl -d '{ "VoterID": 2, "FirstName": "John", "LastName": "Doe" }'
