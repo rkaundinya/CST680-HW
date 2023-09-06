@@ -24,6 +24,7 @@ services:
             - cache
         environment:
             - REDIS_URL=cache:6379
+            - VOTE_API_URL=http://vote-api:3080
         networks:
             - frontend
             - backend

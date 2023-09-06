@@ -51,13 +51,17 @@ add-sample-polls:
 add-sample-votes:
 	curl -d '{ "VoteID": 1, "VoterID": 1, "PollID": 1, "VoteValue": 2}' -H "Content-Type: application/json" -X POST http://localhost:3080/votes
 
+.PHONY: add-vote
+add-vote:
+	curl -d '{ "VoteID": $(voteID), "VoterID": $(voterID), "PollID": $(pollID), "VoteValue": $(voteVal)}' -H "Content-Type: application/json" -X POST http://localhost:3080/votes/voteID/$(voteID)/voterID/$(voterID)/pollID/$(pollID)/voteVal/$(voteVal)
+
 .PHONY: add-poll
 add-poll:
 	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X POST http://localhost:1080/voter-api/voters/$(voterID)/polls/$(pollID)
 
 .PHONY: get-voter
 get-voter:
-	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X GET http://localhost:1080/voter-api/voters/$(voterID)
+	curl -d '{ "VoterID": $(id)}' -H "Content-Type: application/json" -X GET http://localhost:3080/votes/voter/$(id)
 
 .PHONY: get-voter-polls
 get-voter-polls:
@@ -74,6 +78,10 @@ update-voter:
 .PHONY: update-voter-poll
 update-voter-poll:
 	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X PUT http://localhost:1080/voter-api/voters/$(voterID)/polls/$(pollID)
+
+.PHONY: delete-vote
+delete-vote:
+	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X DELETE http://localhost:3080/votes/vote/$(voteID)
 
 .PHONY: delete-voter
 delete-voter:

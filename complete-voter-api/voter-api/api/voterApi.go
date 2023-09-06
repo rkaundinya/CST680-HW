@@ -1,4 +1,4 @@
-package voterApi
+package api
 
 import (
 	"fmt"
@@ -6,28 +6,31 @@ import (
 	"net/http"
 	"strconv"
 
-	"complete-voter-api/voter"
+	"voter-api/voter"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
 )
 
 type VoterApi struct {
-	voterList voter.VoterList
-	db        *voter.VoterDB
+	db         *voter.VoterDB
+	voteAPIURL string
+	apiClient  *resty.Client
 }
 
 // TODO make more robust error handling
-func NewVoterApi() (*VoterApi, error) {
-	dbHandler, err := voter.New()
+func NewVoterApi(location string, inVoteApiURL string) (*VoterApi, error) {
+	dbHandler, err := voter.NewWithCacheInstance(location)
 	if err != nil {
 		return nil, err
 	}
 
+	apiClient := resty.New()
+
 	return &VoterApi{
-		voterList: voter.VoterList{
-			Voters: make(map[uint]voter.Voter),
-		},
-		db: dbHandler,
+		db:         dbHandler,
+		voteAPIURL: inVoteApiURL,
+		apiClient:  apiClient,
 	}, nil
 }
 
@@ -262,7 +265,6 @@ func (v *VoterApi) HealthCheck(c *gin.Context) {
 
 // Need to make this gin compatible --- see todo-api code!
 func (v *VoterApi) GetVoterListJson(c *gin.Context) {
-	//c.JSON(http.StatusOK, v.voterList.Voters)
 	voters, err := v.db.GetVoters()
 	if err != nil {
 		log.Println("Error retrieving voters")

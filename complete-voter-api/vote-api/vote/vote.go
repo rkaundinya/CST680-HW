@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"vote-api/schema"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/nitishm/go-rejson/v4"
@@ -73,6 +74,22 @@ func NewVote(voteID uint, voterID uint, pollID uint, voteVal uint) *Vote {
 	}
 }
 
+func emptyVoter() *schema.Voter {
+	return &schema.Voter{
+		VoterID:   0,
+		FirstName: "",
+		LastName:  "",
+	}
+}
+
+func emptyPoll() *schema.Poll {
+	return &schema.Poll{
+		PollID:       0,
+		PollTitle:    "",
+		PollQuestion: "",
+	}
+}
+
 func (v *VoteDB) AddVote(newVote Vote) error {
 	//Check if vote with id already exists
 	redisKey := RedisKeyFromId(int(newVote.VoteID), RedisKeyPrefix)
@@ -108,6 +125,42 @@ func (v *VoteDB) GetVotes() ([]Vote, error) {
 	return voteList, nil
 }
 
+func (vDB *VoteDB) DeleteVote(vID int) error {
+	redisKey := RedisKeyFromId(vID, "vote:")
+	var existingVote Vote
+	if err := vDB.getItemFromRedis(redisKey, &existingVote); err != nil {
+		return errors.New("no voter with ID " + fmt.Sprint(vID) + "exists to delete")
+	}
+
+	if _, err := vDB.cache.helper.JSONDel(redisKey, "."); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (vDB *VoteDB) GetVoter(id string) (schema.Voter, error) {
+	cacheKey := "voter:" + id
+	var voter schema.Voter
+	err := vDB.getVoterFromRedis(cacheKey, &voter)
+	if err != nil {
+		return *emptyVoter(), err
+	}
+
+	return voter, nil
+}
+
+func (vDB *VoteDB) GetPoll(id string) (schema.Poll, error) {
+	cacheKey := "poll:" + id
+	var poll schema.Poll
+	err := vDB.getPollFromRedis(cacheKey, &poll)
+	if err != nil {
+		return *emptyPoll(), err
+	}
+
+	return poll, nil
+}
+
 func (vDB *VoteDB) getItemFromRedis(key string, voteItem *Vote) error {
 	voteObj, err := vDB.cache.helper.JSONGet(key, ".")
 	if err != nil {
@@ -115,6 +168,34 @@ func (vDB *VoteDB) getItemFromRedis(key string, voteItem *Vote) error {
 	}
 
 	err = json.Unmarshal(voteObj.([]byte), voteItem)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (vDB *VoteDB) getVoterFromRedis(key string, voter *schema.Voter) error {
+	itemObject, err := vDB.cache.helper.JSONGet(key, ".")
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(itemObject.([]byte), voter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (vDB *VoteDB) getPollFromRedis(key string, poll *schema.Poll) error {
+	itemObject, err := vDB.cache.helper.JSONGet(key, ".")
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(itemObject.([]byte), poll)
 	if err != nil {
 		return err
 	}

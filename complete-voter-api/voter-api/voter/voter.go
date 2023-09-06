@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -46,14 +45,6 @@ type VoterDB struct {
 
 	//Redis cache connections
 	cache
-}
-
-func New() (*VoterDB, error) {
-	redisUrl := os.Getenv("REDIS_URL")
-	if redisUrl == "" {
-		redisUrl = RedisDefaultLocation
-	}
-	return NewWithCacheInstance(redisUrl)
 }
 
 func NewWithCacheInstance(location string) (*VoterDB, error) {

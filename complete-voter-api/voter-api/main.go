@@ -1,11 +1,11 @@
 package main
 
 import (
-	"complete-voter-api/voterApi"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
+	"voter-api/api"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -13,14 +13,16 @@ import (
 
 // Using flag driven CLI for now
 var (
-	hostFlag string
-	portFlag uint
-	cacheURL string
+	hostFlag   string
+	portFlag   uint
+	cacheURL   string
+	voteAPIURL string
 )
 
 func processCmdLineFlags() {
 	flag.StringVar(&hostFlag, "h", "0.0.0.0", "Listen on all interfaces")
 	flag.StringVar(&cacheURL, "c", "0.0.0.0:6379", "Default cache location")
+	flag.StringVar(&voteAPIURL, "v", "http://localhost:3080", "Default vote api location")
 	flag.UintVar(&portFlag, "p", 1080, "Default Port")
 
 	flag.Parse()
@@ -41,6 +43,7 @@ func setupParams() {
 
 	//process env variables
 	cacheURL = envVarOrDefault("REDIS_URL", cacheURL)
+	voteAPIURL = envVarOrDefault("VOTE_API_URL", voteAPIURL)
 	hostFlag = envVarOrDefault("VOTERAPI_HOST", hostFlag)
 	pfNew, err := strconv.Atoi(envVarOrDefault("VOTERAPI_PORT", fmt.Sprintf("%d", portFlag)))
 	// only update port if env var converts to int successfully - else use default
@@ -52,7 +55,7 @@ func setupParams() {
 func main() {
 	setupParams()
 
-	apiHandler, err := voterApi.NewVoterApi()
+	apiHandler, err := api.NewVoterApi(cacheURL, voteAPIURL)
 	if err != nil {
 		panic(err)
 	}
