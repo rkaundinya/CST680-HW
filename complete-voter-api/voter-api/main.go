@@ -65,18 +65,13 @@ func main() {
 
 	r.GET("/voters", apiHandler.GetVoterListJson)
 	r.GET("/voters/:voterID", apiHandler.GetVoterJson)
-	r.GET("/voters/:voterID/polls", apiHandler.GetVoterPollsJson)
-	r.GET("/voters/:voterID/polls/:pollID", apiHandler.GetPollJson)
 	r.GET("/voters/health", apiHandler.HealthCheck)
 
 	r.POST("/voters", apiHandler.AddVoter)
 	r.POST("/voters/:voterID/firstName/:firstName/lastName/:lastName", apiHandler.AddVoter)
-	r.POST("/voters/:voterID/polls/:pollID", apiHandler.AddPoll)
 
 	r.PUT("/voters/:voterID", apiHandler.UpdateVoter)
-	r.PUT("/voters/:voterID/polls/:pollID", apiHandler.UpdatePoll)
 	r.DELETE("/voters/:voterID", apiHandler.DeleteVoter)
-	r.DELETE("/voters/:voterID/polls/:pollID", apiHandler.DeletePoll)
 
 	serverPath := fmt.Sprintf("%s:%d", hostFlag, portFlag)
 	r.Run(serverPath)

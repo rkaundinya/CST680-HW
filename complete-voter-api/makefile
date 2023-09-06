@@ -45,7 +45,12 @@ populate-sample-voters:
 
 .PHONY: add-sample-polls
 add-sample-polls:
-	curl -d '{ "PollID": 1, "PollTitle": "Testing", "PollQuestion": "Are you goign to work"}' -H "Content-Type: application/json" -X POST http://localhost:2080/polls
+	curl -d '{ "PollID": 1, "PollTitle": "Testing", "PollQuestion": "Are you going to work"}' -H "Content-Type: application/json" -X POST http://localhost:2080/polls
+
+.PHONY: add-sample-poll-options
+add-sample-poll-options:
+	curl -d '{ "PollOptionID": 1, "PollOptionText": "Yes I will work"}' -H "Content-Type: application/json" -X POST http://localhost:2080/polls/poll/1/pollOption
+	curl -d '{ "PollOptionID": 2, "PollOptionText": "No I won't work"}' -H "Content-Type: application/json" -X POST http://localhost:2080/polls/poll/1/pollOption
 
 .PHONY: add-sample-votes
 add-sample-votes:
@@ -59,25 +64,25 @@ add-vote:
 add-poll:
 	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X POST http://localhost:1080/voter-api/voters/$(voterID)/polls/$(pollID)
 
+.PHONY: add-poll-option
+add-poll-option:
+	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X POST http://localhost:2080/polls/poll/$(pollID)/pollOption/$(optID)/description/$(desc)
+
+.PHONY: delete-poll-option
+delete-poll-option:
+	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X DELETE http://localhost:2080/polls/poll/$(pollID)/pollOption/$(optID)
+
 .PHONY: get-voter
 get-voter:
 	curl -d '{ "VoterID": $(id)}' -H "Content-Type: application/json" -X GET http://localhost:3080/votes/voter/$(id)
 
-.PHONY: get-voter-polls
-get-voter-polls:
-	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X GET http://localhost:1080/voter-api/voters/$(voterID)/polls
-
-.PHONY: get-voter-specific-poll
-get-voter-specific-poll:
-	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X GET http://localhost:1080/voter-api/voters/$(voterID)/polls/$(pollID)
+.PHONY: get-poll
+get-poll:
+	curl -d '{ "PollID": $(id)}' -H "Content-Type: application/json" -X GET http://localhost:2080/polls/poll/$(id)
 
 .PHONY: update-voter
 update-voter:
 	curl -d '{ "VoterID": $(voterID), "FirstName": "$(firstName)", "LastName": "$(lastName)" }' -H "Content-Type: application/json" -X PUT http://localhost:1080/voter-api/voters/$(voterID)
-
-.PHONY: update-voter-poll
-update-voter-poll:
-	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X PUT http://localhost:1080/voter-api/voters/$(voterID)/polls/$(pollID)
 
 .PHONY: delete-vote
 delete-vote:
@@ -87,9 +92,9 @@ delete-vote:
 delete-voter:
 	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X DELETE http://localhost:1080/voter-api/voters/$(voterID)
 
-.PHONY: delete-voter-poll
-delete-voter-poll:
-	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X DELETE http://localhost:1080/voter-api/voters/$(voterID)/polls/$(pollID)
+.PHONY: delete-poll
+delete-poll:
+	curl -w "HTTP Status: %{http_code}\n" -H "Content-Type: application/json" -X DELETE http://localhost:2080/polls/poll/$(pollID)
 
 .PHONY: health-check
 health-check:

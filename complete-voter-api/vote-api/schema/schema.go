@@ -20,8 +20,8 @@ type pollOption struct {
 }
 
 type Poll struct {
-	PollID       uint         `json:"id"`
-	PollTitle    string       `json:"title"`
-	PollQuestion string       `json:"question"`
-	PollOptions  []pollOption `json:"options"`
+	PollID       uint
+	PollTitle    string
+	PollQuestion string
+	PollOptions  []pollOption
 }

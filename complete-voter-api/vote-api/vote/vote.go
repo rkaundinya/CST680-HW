@@ -125,6 +125,19 @@ func (v *VoteDB) GetVotes() ([]Vote, error) {
 	return voteList, nil
 }
 
+func (v *VoteDB) GetVote(voteID uint) (Vote, error) {
+	var vote Vote
+
+	//Query redis for item
+	redisKey := RedisKeyFromId(int(voteID), RedisKeyPrefix)
+	err := v.getItemFromRedis(redisKey, &vote)
+	if err != nil {
+		return Vote{}, err
+	}
+
+	return vote, nil
+}
+
 func (vDB *VoteDB) DeleteVote(vID int) error {
 	redisKey := RedisKeyFromId(vID, "vote:")
 	var existingVote Vote
@@ -139,28 +152,6 @@ func (vDB *VoteDB) DeleteVote(vID int) error {
 	return nil
 }
 
-func (vDB *VoteDB) GetVoter(id string) (schema.Voter, error) {
-	cacheKey := "voter:" + id
-	var voter schema.Voter
-	err := vDB.getVoterFromRedis(cacheKey, &voter)
-	if err != nil {
-		return *emptyVoter(), err
-	}
-
-	return voter, nil
-}
-
-func (vDB *VoteDB) GetPoll(id string) (schema.Poll, error) {
-	cacheKey := "poll:" + id
-	var poll schema.Poll
-	err := vDB.getPollFromRedis(cacheKey, &poll)
-	if err != nil {
-		return *emptyPoll(), err
-	}
-
-	return poll, nil
-}
-
 func (vDB *VoteDB) getItemFromRedis(key string, voteItem *Vote) error {
 	voteObj, err := vDB.cache.helper.JSONGet(key, ".")
 	if err != nil {
@@ -168,34 +159,6 @@ func (vDB *VoteDB) getItemFromRedis(key string, voteItem *Vote) error {
 	}
 
 	err = json.Unmarshal(voteObj.([]byte), voteItem)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (vDB *VoteDB) getVoterFromRedis(key string, voter *schema.Voter) error {
-	itemObject, err := vDB.cache.helper.JSONGet(key, ".")
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(itemObject.([]byte), voter)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (vDB *VoteDB) getPollFromRedis(key string, poll *schema.Poll) error {
-	itemObject, err := vDB.cache.helper.JSONGet(key, ".")
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(itemObject.([]byte), poll)
 	if err != nil {
 		return err
 	}

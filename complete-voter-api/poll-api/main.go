@@ -61,8 +61,14 @@ func main() {
 	r.Use(cors.Default())
 
 	r.GET("/polls", apiHandler.GetPolls)
+	r.GET("/polls/poll/:pollID", apiHandler.GetPoll)
 
 	r.POST("/polls", apiHandler.AddPoll)
+	r.POST("/polls/poll/:pollID/pollOption", apiHandler.AddPollOption)
+	r.POST("/polls/poll/:pollID/pollOption/:optionID/description/:description", apiHandler.AddPollOption)
+
+	r.DELETE("/polls/poll/:pollID", apiHandler.DeletePoll)
+	r.DELETE("/polls/poll/:pollID/pollOption/:optionID", apiHandler.DeletePollOption)
 
 	serverPath := fmt.Sprintf("%s:%d", hostFlag, portFlag)
 	r.Run(serverPath)

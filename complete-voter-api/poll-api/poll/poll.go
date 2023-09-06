@@ -93,6 +93,68 @@ func (p *PollDB) AddPoll(newPoll Poll) error {
 	return nil
 }
 
+func (p *PollDB) AddPollOption(pollID uint, optionId uint, body string) error {
+	//Check if poll with id already exists
+	redisKey := RedisKeyFromId(int(pollID), RedisKeyPrefix)
+	var existingPoll Poll
+
+	if err := p.getItemFromRedis(redisKey, &existingPoll); err != nil {
+		fmt.Println("failed to get poll from redis")
+		return errors.New("poll does not exist")
+	}
+
+	for _, option := range existingPoll.PollOptions {
+		if option.PollOptionID == optionId {
+			fmt.Println("Trying to re-add existing poll option - not allowed")
+			return errors.New("poll option with id already exists")
+		}
+	}
+
+	if err := p.getItemFromRedis(redisKey, &existingPoll); err != nil {
+		fmt.Println("Error finding poll")
+		return err
+	}
+
+	option := pollOption{PollOptionID: optionId, PollOptionText: body}
+	existingPoll.PollOptions = append(existingPoll.PollOptions, option)
+	fmt.Print("printing poll options")
+	fmt.Println(existingPoll.PollOptions[0])
+
+	if _, err := p.cache.helper.JSONArrAppend(redisKey, ".PollOptions", option); err != nil {
+		fmt.Println("Error adding poll option")
+		return err
+	}
+
+	return nil
+}
+
+func (p *PollDB) DeletePollOption(pollID uint, optionID uint) error {
+	redisKey := RedisKeyFromId(int(pollID), RedisKeyPrefix)
+	var existingPoll Poll
+
+	if err := p.getItemFromRedis(redisKey, &existingPoll); err != nil {
+		fmt.Println("failed to get poll from redis")
+		return errors.New("poll does not exist")
+	}
+
+	optionIdx := -1
+
+	for idx, option := range existingPoll.PollOptions {
+		if option.PollOptionID == optionID {
+			optionIdx = idx
+			break
+		}
+	}
+
+	if optionIdx == -1 {
+		return errors.New("no poll option with ID " + fmt.Sprint(optionID))
+	}
+
+	p.helper.JSONArrPop(redisKey, ".PollOptions", optionIdx)
+
+	return nil
+}
+
 func (p *PollDB) GetPolls() ([]Poll, error) {
 	var poll Poll
 	var voterList []Poll
@@ -109,6 +171,42 @@ func (p *PollDB) GetPolls() ([]Poll, error) {
 	}
 
 	return voterList, nil
+}
+
+func (p *PollDB) GetPoll(pollID uint) (Poll, error) {
+	polls, err := p.GetPolls()
+	if err != nil {
+		return Poll{}, err
+	}
+
+	pollIdx := -1
+
+	for idx, poll := range polls {
+		if poll.PollID == pollID {
+			pollIdx = idx
+			break
+		}
+	}
+
+	if pollIdx == -1 {
+		return Poll{}, errors.New("Failed to find poll")
+	}
+
+	return polls[pollIdx], nil
+}
+
+func (pDB *PollDB) DeletePoll(pID int) error {
+	redisKey := RedisKeyFromId(pID, RedisKeyPrefix)
+	var existingPoll Poll
+	if err := pDB.getItemFromRedis(redisKey, &existingPoll); err != nil {
+		return errors.New("no voter with ID " + fmt.Sprint(pID) + "exists to delete")
+	}
+
+	if _, err := pDB.cache.helper.JSONDel(redisKey, "."); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (pDB *PollDB) getItemFromRedis(key string, pollItem *Poll) error {

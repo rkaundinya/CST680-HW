@@ -67,7 +67,7 @@ func main() {
 	r.Use(cors.Default())
 
 	r.GET("/votes", apiHandler.GetVotes)
-	r.GET("/votes/voter/:VoterID", apiHandler.GetVoter)
+	r.GET("/votes/voteID/:voteID", apiHandler.GetVote)
 
 	r.POST("/votes", apiHandler.AddVoteJson)
 	r.POST("/votes/voteID/:voteID/voterID/:voterID/pollID/:pollID/voteVal/:voteVal", apiHandler.AddVote)
