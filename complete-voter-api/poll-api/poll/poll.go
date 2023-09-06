@@ -120,7 +120,7 @@ func (p *PollDB) AddPollOption(pollID uint, optionId uint, body string) error {
 	fmt.Print("printing poll options")
 	fmt.Println(existingPoll.PollOptions[0])
 
-	if _, err := p.cache.helper.JSONArrAppend(redisKey, ".PollOptions", option); err != nil {
+	if _, err := p.cache.helper.JSONSet(redisKey, ".", existingPoll); err != nil {
 		fmt.Println("Error adding poll option")
 		return err
 	}
